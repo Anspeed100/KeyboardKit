@@ -40,6 +40,8 @@ public extension UITextDocumentProxy {
         tryInsertSpaceAfterAutocomplete()
     }
     
+    
+    
     /**
      Try inserting a space into the proxy after inserting an
      autocompete suggestion.

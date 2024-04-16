@@ -96,12 +96,69 @@ public extension UITextDocumentProxy {
      Replace the current word with a replacement text.
      */
     func replaceCurrentWord(with replacement: String) {
+        
         guard let word = currentWord else { return }
+        let sentenceVal = documentContext ?? ""
+
         let offset = currentWordPostCursorPart?.count ?? 0
         adjustTextPosition(byCharacterOffset: offset)
-        deleteBackward(times: word.count)
-        insertText(replacement)
+
+        if let lastIndex = sentenceVal.lastIndex(of: " "),
+           lastIndex != sentenceVal.endIndex {
+            let substring = sentenceVal[sentenceVal.index(after: lastIndex)..<sentenceVal.endIndex]
+            if(checkFormat(String(substring))){
+                //return String(substring)
+                deleteBackward(times: substring.count)
+                
+                insertText(replacement)
+            }
+            else{
+                deleteBackward(times: word.count)
+                
+                insertText(replacement)
+            }
+        } else {
+            let substring = sentenceVal
+            if(checkFormat(String(substring))){
+                deleteBackward(times: substring.count)
+                
+                insertText(replacement)
+            }
+            else{
+                deleteBackward(times: word.count)
+                
+                insertText(replacement)
+            }
+        }
+        
+//        deleteBackward(times: word.count)
+//
+//        insertText(replacement)
     }
+}
+
+func checkFormat(_ text: String) -> Bool {
+    let formatRegex = #"^(\w+)\.(\w+)$"#
+        let tickerRegex = #"^(btc|eth|web|twitter)$"#
+        
+        let range = NSRange(location: 0, length: text.utf16.count)
+        
+        if let regex = try? NSRegularExpression(pattern: formatRegex) {
+            let matches = regex.matches(in: text, options: [], range: range)
+            
+            if matches.count > 0 {
+                let secondStringRange = matches[0].range(at: 2)
+                let secondString = (text as NSString).substring(with: secondStringRange)
+                
+                if let tickerMatch = try? NSRegularExpression(pattern: tickerRegex) {
+                    let tickerMatches = tickerMatch.matches(in: secondString, options: [], range: NSRange(location: 0, length: secondString.utf16.count))
+                    
+                    return tickerMatches.count > 0
+                }
+            }
+        }
+        
+        return false
 }
 
 private extension UITextDocumentProxy {
